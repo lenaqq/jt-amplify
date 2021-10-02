@@ -1,0 +1,3 @@
+GraphQL endpoint: https://3tertcnpdzgbhauqh2mjlmmygq.appsync-api.us-east-1.amazonaws.com/graphql
+GraphQL API KEY: da2-zlz23dh7uzbrrlnjttnvsx5icq
+

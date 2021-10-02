@@ -1,0 +1,123 @@
+# User login is stored in the Cognito User Pool. Each user will be assigned a UUID when the account is created.
+# Users have one of the following roles:
+#   sender: A client who uses JettingToday to send their parcels
+#   admin: An administrator of the platform
+#   driver: A driver who delivers parcels
+#   operator: A depot minder
+#
+# Qs: Do we allow an user to have multiple roles?
+
+# A sender can keep a list of origin and destination stops in the profile for future
+type Sender @model {
+  id: ID! # The UUID from Cognito User Pool
+  stops: [Stop] @connection(keyName: "bySender", fields: ["id"])
+  jobs: [Job] @connection(keyName: "bySenderStatus", fields: ["id"])
+}
+
+# A stop in the parcel's journey. It can be a sender's home address, recipient's address or a depot.
+type Stop @model(subscriptions: null) 
+  @key(name: "bySender", fields: ["senderID", "originORdestination"], queryField: "stopsBySender") {
+  id: ID!
+  senderID: ID! # Nil UUID if the stop is a depot
+  personName: String # Optional field if the stop is an origin or destination of a sender
+  address: String!
+  suburb: String!
+  postcode: String!
+  state: String!
+  isDepot: Boolean!
+  originORdestination: Int! # 0 origin: 1: destination
+  active: Boolean!
+}
+
+# When a depot operator signs up, he has to designate a depot. If this operator also minds other depots, he has to create 
+# a separate account for each depot.
+type Operator @model(subscriptions: null) {
+  id: ID! # The UUID from Cognito User Pool
+  depotID: ID! # The UUID of the Stop(depot) that the operator minds
+  incomingRoutes: [Route] @connection(keyName: "byToStatus", fields: ["id"])  
+  outgoingRoutes: [Route] @connection(keyName: "byFromStatus", fields: ["id"])  
+}
+
+# A job may consist a few routes in its journey
+# A job also contains a list of photos posted by the sender when placing orders and the driver when a successful or failed delivery is made.
+type Job @model 
+  @key(name: "bySenderStatus", fields: ["senderID", "status"], queryField: "jobsBySenderStatus") {
+  id: ID! # When a job is created by a sender, a UUID is generated. This UUID is used to generate a QR code.
+  senderID: ID!
+  itemValue: Int!
+  freightCost: Int!
+  insurance: Int!
+  description: String!
+  stripeID: String! # Required for refund
+  routes: [Route] @connection(keyName: "byJob", fields: ["id"])
+  status: Int!
+  photos: [Photo] @connection(keyName: "byJob", fields: ["id"])
+}
+
+# A route is one of the legs in a parcel's journey. It has one of the following states in its life cycle.
+# created: a route created by admin
+# open: a route that is broadcast for drivers to grab
+# accepted: a route that is accepted by a driver
+# assigned: a route that is assigned to a driver
+# picked-up: the parcel has been picked in this route
+# delivered successfully: a parcel is delivered to its "to" Stop successfully
+# failed delivery: a parcel is delivered to its "to" Stop but no one can receive it
+# returned to depot: a parcel is returned to the depot after a failed delivery
+# returned to sender: a parcel is returned to the sender after a failed delivery
+type Route @model 
+  @key(name: "byJob", fields: ["jobID"], queryField: "routesByJob") 
+  @key(name: "byDriverStatus", fields: ["driverID", "status"], queryField: "routesByDriverStatus")
+  @key(name: "byToStatus", fields: ["toStopID", "status"], queryField: "incomingRoutes")
+  @key(name: "byFromStatus", fields: ["fromStopID", "status"], queryField: "outgoingRoutes") {
+  id: ID!
+  jobID: ID!
+  fromStopID: ID! 
+  from: Stop @connection(fields: ["fromStopID"])
+  toStopID: ID!
+  to: Stop @connection(fields: ["toStopID"])
+  driverID: ID! # Nil UUID before the route is accepted by or assigned to a driver
+  driver: Driver @connection(fields: ["driverID"])
+  createdBy: ID! # Nil UUID before an admin plans the route for a job
+  updatedBy: ID! # Nil UUID before the route is accepted by or assigned to a driver
+  segmentNo: Int!
+  status: Int!
+}
+
+# Suburb and Driver have many-to-many relationship
+# A suburb can be serviced by many drivers
+# A driver can service many suburbs
+type Suburb @model(subscriptions: null) {
+  id: ID!
+  name: String!
+  postcode: String!
+  state: String!
+  drivers: [SuburbDriver] @connection(keyName: "bySuburb", fields: ["id"]) # Drivers who service this suburb 
+}
+
+type SuburbDriver
+  @model(queries: null)
+  @key(name: "bySuburb", fields: ["suburbID", "driverID"])
+  @key(name: "byDriver", fields: ["driverID", "suburbID"]) {
+  id: ID!
+  suburbID: ID!
+  driverID: ID!
+  suburb: Suburb! @connection(fields: ["suburbID"])
+  driver: Driver! @connection(fields: ["driverID"])
+}
+
+# All jobs which contain a route assigned to the driver
+type Driver @model(subscriptions: null) {
+  id: ID! # The UUID from Cognito User Pool
+  routes: [Route] @connection(keyName: "byDriverStatus", fields: ["id"])
+  available: Boolean!
+  suburbs: [SuburbDriver] @connection(keyName: "byDriver", fields: ["id"]) # Suburbs serviced by this driver 
+}
+
+type Photo @model(subscriptions: null) 
+  @key(name: "byJob", fields: ["jobID"], queryField: "photosByJob") {
+  id: ID!
+  jobID: ID!
+  url: String!
+  type: Int!
+}
+

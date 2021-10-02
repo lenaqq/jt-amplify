@@ -3,14 +3,14 @@
 
 const awsmobile = {
     "aws_project_region": "us-east-1",
-    "aws_appsync_graphqlEndpoint": "https://6eaiqz43s5cpfpt5hspcay3q64.appsync-api.us-east-1.amazonaws.com/graphql",
+    "aws_appsync_graphqlEndpoint": "https://3tertcnpdzgbhauqh2mjlmmygq.appsync-api.us-east-1.amazonaws.com/graphql",
     "aws_appsync_region": "us-east-1",
     "aws_appsync_authenticationType": "API_KEY",
-    "aws_appsync_apiKey": "da2-3dxwk65h2bgizmnz3auvvwwvkq",
-    "aws_cognito_identity_pool_id": "us-east-1:0118d5a4-a3af-4db3-a974-6593764646ea",
+    "aws_appsync_apiKey": "da2-zlz23dh7uzbrrlnjttnvsx5icq",
+    "aws_cognito_identity_pool_id": "us-east-1:90bb953a-8fb7-4df7-a726-e45062161daa",
     "aws_cognito_region": "us-east-1",
-    "aws_user_pools_id": "us-east-1_bFkiQBjaC",
-    "aws_user_pools_web_client_id": "8f0m7m67vtdp72ap4a8kdgasl",
+    "aws_user_pools_id": "us-east-1_ZJ7Vas0Qp",
+    "aws_user_pools_web_client_id": "210j4qqa1rj7drv0ml64r8gsve",
     "oauth": {},
     "aws_cognito_login_mechanisms": [
         "PREFERRED_USERNAME"
