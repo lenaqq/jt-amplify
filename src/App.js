@@ -1,4 +1,5 @@
 import logo from './logo.svg';
+
 import React, { useState, useEffect } from "react";
 
 import './App.css';
@@ -6,8 +7,10 @@ import './App.css';
 import { withAuthenticator, AmplifySignOut } from "@aws-amplify/ui-react";
 import { createSuburb, updateSuburb } from "./graphql/mutations";
 import { listSuburbs } from "./graphql/queries";
+
 import Amplify, { API, graphqlOperation } from "aws-amplify";
 import awsExports from "./aws-exports";
+
 Amplify.configure(awsExports);
 
 function App() {
@@ -30,7 +33,7 @@ function App() {
     e.preventDefault();
     if (name === "") return alert("Input field cannot be empty");
     const suburb = { name, done: false };
-    await API.graphql(graphqlOperation(createSuburb, { input: { name: suburb.name, postcode: "2022", state: "NSW"}}));
+    await API.graphql(graphqlOperation(createSuburb, { input: { name: suburb, postcode: "2022", state: "NSW"}}));
     allSuburbs === null ? setAllSuburbs([suburb]) : setAllSuburbs([suburb, ...allSuburbs]);
   };
  
@@ -57,6 +60,10 @@ function App() {
           Learn React
         </a>
       </header>
+      
+      <div className="sign-out">
+         <AmplifySignOut />
+       </div>
 
       <form className="add-todo-form" onSubmit={submitAddSuburb}>
       <input
@@ -91,4 +98,5 @@ function App() {
   );
 }
 
-export default App;
+// export default App;
+export default withAuthenticator(App);
